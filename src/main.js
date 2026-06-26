@@ -1,3 +1,4 @@
+import { supabase } from './supabase.js';
 import './style.css'
 import javascriptLogo from './assets/javascript.svg'
 import viteLogo from './assets/vite.svg'
@@ -58,3 +59,16 @@ document.querySelector('#app').innerHTML = `
 `
 
 setupCounter(document.querySelector('#counter'))
+
+async function testSupabaseConnection() {
+  const { data, error } = await supabase.auth.getSession();
+
+  if (error) {
+    console.error('Błąd połączenia z Supabase:', error.message);
+    return;
+  }
+
+  console.log('Połączenie z Supabase działa poprawnie.', data);
+}
+
+testSupabaseConnection();
