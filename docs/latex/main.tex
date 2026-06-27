@@ -1,0 +1,579 @@
+\documentclass[12pt,a4paper]{article}
+
+% =========================================================
+% PAKIETY
+% =========================================================
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[polish]{babel}
+\usepackage{lmodern}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage[hidelinks]{hyperref}
+\usepackage{setspace}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+
+\geometry{
+    left=2.5cm,
+    right=2.5cm,
+    top=2.5cm,
+    bottom=2.5cm
+}
+
+\setstretch{1.15}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+\renewcommand{\arraystretch}{1.25}
+
+\definecolor{maincolor}{HTML}{1D3557}
+\definecolor{accentcolor}{HTML}{457B9D}
+\definecolor{lightcolor}{HTML}{F3F6FA}
+
+\titleformat{\section}
+{\Large\bfseries\color{maincolor}}
+{\thesection.}{0.5em}{}
+
+\titleformat{\subsection}
+{\large\bfseries\color{maincolor}}
+{\thesubsection.}{0.5em}{}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{StudyPlanner}
+\fancyhead[R]{Języki internetowe}
+\fancyfoot[C]{\thepage}
+
+\graphicspath{{screenshots/}}
+
+\newcommand{\screenshot}[3][\textwidth]{
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=#1]{#2}
+        \caption{#3}
+    \end{figure}
+}
+
+\begin{document}
+
+% =========================================================
+% STRONA TYTUŁOWA
+% =========================================================
+
+\begin{titlepage}
+    \centering
+
+    \includegraphics[width=0.55\textwidth]{logo-wsiz.png}
+
+    \vspace{1.8cm}
+
+    {\large IN.INP.TIM.007 A P1 2026 L\par}
+
+    \vspace{0.4cm}
+
+    {\Large\textbf{Języki internetowe}\par}
+
+    \vspace{1.5cm}
+
+    {\LARGE\textbf{Zadanie projektowe}\par}
+
+    \vspace{0.5cm}
+
+    {\Huge\textbf{\color{maincolor}StudyPlanner}\par}
+
+    \vspace{0.4cm}
+
+    {\Large Aplikacja webowa do zarządzania zadaniami\par}
+
+    \vfill
+
+    \begin{flushleft}
+        \textbf{Prowadzący:}\\
+        inż. Paweł Janda
+    \end{flushleft}
+
+    \vspace{1cm}
+
+    \begin{flushright}
+        \textbf{Wykonał:}\\
+        Maksymilian Tołpa\\
+        nr albumu: w71368
+    \end{flushright}
+
+    \vfill
+
+    {\large Rzeszów, 2026\par}
+
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+% =========================================================
+\section{Analiza problemu}
+% =========================================================
+
+\subsection{Opis problemu}
+
+Studenci muszą pamiętać o wielu zadaniach, projektach i terminach. Informacje te są często zapisywane w różnych miejscach, przez co łatwo o nich zapomnieć.
+
+StudyPlanner pozwala zapisać wszystkie zadania w jednej aplikacji. Użytkownik może sprawdzić termin, priorytet oraz aktualny status zadania.
+
+Aplikacja porządkuje zadania i ułatwia kontrolowanie postępów w nauce.
+
+\subsection{Użytkownik aplikacji}
+
+Aplikacja jest przeznaczona głównie dla studentów i osób uczących się.
+
+Użytkownik potrzebuje możliwości:
+
+\begin{itemize}[leftmargin=*]
+    \item zapisania zadania,
+    \item określenia terminu,
+    \item wybrania priorytetu,
+    \item zmiany statusu,
+    \item edycji lub usunięcia zadania,
+    \item wyszukania zadania,
+    \item wyświetlenia tylko własnych danych.
+\end{itemize}
+
+\subsection{Analiza podobnych rozwiązań}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\textwidth}{|p{2.5cm}|X|X|X|}
+\hline
+\textbf{Aplikacja} &
+\textbf{Co robi dobrze} &
+\textbf{Ograniczenie} &
+\textbf{Wykorzystana inspiracja} \\
+\hline
+
+Todoist &
+Obsługuje zadania, terminy i priorytety. &
+Posiada wiele funkcji niepotrzebnych w prostym planerze. &
+Priorytety i oznaczanie wykonanych zadań. \\
+\hline
+
+Microsoft To Do &
+Ma prosty i czytelny interfejs. &
+Nie jest przygotowany bezpośrednio pod zadania studenckie. &
+Prosta lista zadań i czytelne formularze. \\
+\hline
+
+Trello &
+Dobrze pokazuje podział zadań według etapów. &
+Jest nastawione głównie na tablice i pracę zespołową. &
+Podział zadań według statusu. \\
+\hline
+\end{tabularx}
+\caption{Porównanie podobnych aplikacji}
+\end{table}
+
+StudyPlanner różni się tym, że jest prostą aplikacją przygotowaną do organizacji nauki. Każde zadanie posiada przedmiot, termin, priorytet i status.
+
+% =========================================================
+\section{Analiza funkcjonalna}
+% =========================================================
+
+\subsection{Lista funkcji}
+
+Aplikacja posiada następujące funkcje:
+
+\begin{itemize}[leftmargin=*]
+    \item rejestracja użytkownika,
+    \item logowanie i wylogowanie,
+    \item zapamiętywanie sesji,
+    \item dodawanie zadań,
+    \item edytowanie zadań,
+    \item usuwanie zadań,
+    \item oznaczanie zadania jako wykonane,
+    \item ustawianie statusu,
+    \item ustawianie priorytetu,
+    \item wyszukiwanie zadań,
+    \item filtrowanie po statusie,
+    \item filtrowanie po priorytecie,
+    \item wyświetlanie statystyk,
+    \item wykrywanie zadań po terminie,
+    \item walidacja formularzy,
+    \item obsługa błędów i pustej listy.
+\end{itemize}
+
+\subsection{User stories}
+
+\begin{itemize}[leftmargin=*]
+    \item Jako użytkownik chcę utworzyć konto, aby korzystać z własnego planera.
+    \item Jako użytkownik chcę się zalogować, aby zobaczyć swoje zadania.
+    \item Jako student chcę dodać zadanie, aby zapisać obowiązek.
+    \item Jako student chcę ustawić termin, aby wiedzieć, kiedy wykonać zadanie.
+    \item Jako student chcę ustawić priorytet, aby określić ważność zadania.
+    \item Jako student chcę zmienić status, aby kontrolować postęp.
+    \item Jako student chcę edytować zadanie, aby poprawić jego dane.
+    \item Jako student chcę usunąć zadanie, które nie jest już potrzebne.
+    \item Jako student chcę filtrować zadania, aby szybciej znaleźć potrzebne wpisy.
+    \item Jako użytkownik chcę widzieć tylko własne zadania.
+\end{itemize}
+
+\subsection{Lista zadań projektowych}
+
+\begin{longtable}{|p{1.2cm}|p{8.7cm}|p{2cm}|p{2.2cm}|}
+\hline
+\textbf{ID} &
+\textbf{Zadanie} &
+\textbf{Priorytet} &
+\textbf{Status} \\
+\hline
+T1 & Analiza problemu i użytkownika & Wysoki & Wykonane \\
+\hline
+T2 & Analiza podobnych aplikacji & Średni & Wykonane \\
+\hline
+T3 & Utworzenie projektu Vite & Wysoki & Wykonane \\
+\hline
+T4 & Utworzenie repozytorium GitHub & Wysoki & Wykonane \\
+\hline
+T5 & Konfiguracja Supabase & Wysoki & Wykonane \\
+\hline
+T6 & Utworzenie tabeli tasks & Wysoki & Wykonane \\
+\hline
+T7 & Dodanie zabezpieczeń RLS & Wysoki & Wykonane \\
+\hline
+T8 & Rejestracja i logowanie & Wysoki & Wykonane \\
+\hline
+T9 & Dodawanie zadań & Wysoki & Wykonane \\
+\hline
+T10 & Edycja i usuwanie zadań & Wysoki & Wykonane \\
+\hline
+T11 & Filtrowanie i wyszukiwanie & Średni & Wykonane \\
+\hline
+T12 & Responsywny wygląd aplikacji & Średni & Wykonane \\
+\hline
+T13 & Testowanie aplikacji & Wysoki & Wykonane \\
+\hline
+T14 & Wdrożenie na Vercel & Wysoki & Wykonane \\
+\hline
+T15 & Przygotowanie README & Średni & Wykonane \\
+\hline
+T16 & Przygotowanie dokumentacji & Średni & Wykonane \\
+\hline
+\end{longtable}
+
+\subsection{Narzędzie do zarządzania zadaniami}
+
+Do zaplanowania pracy wykorzystano GitHub Projects.
+
+Zadania zostały podzielone na kolumny:
+
+\begin{itemize}[leftmargin=*]
+    \item Todo,
+    \item In Progress,
+    \item Done.
+\end{itemize}
+
+Po wykonaniu zadania było ono przenoszone do kolumny Done.
+
+\screenshot{11_github_projects.png}{Tablica zadań w GitHub Projects}
+
+% =========================================================
+\section{Harmonogram pracy}
+% =========================================================
+
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{|p{1.3cm}|X|p{2.8cm}|p{2.3cm}|}
+\hline
+\textbf{Etap} &
+\textbf{Zakres prac} &
+\textbf{Planowany termin} &
+\textbf{Status} \\
+\hline
+1 & Analiza problemu i użytkownika & Tydzień 1 & Wykonane \\
+\hline
+2 & Lista funkcji i user stories & Tydzień 1 & Wykonane \\
+\hline
+3 & Utworzenie projektu i repozytorium & Tydzień 1 & Wykonane \\
+\hline
+4 & Konfiguracja Supabase i bazy danych & Tydzień 2 & Wykonane \\
+\hline
+5 & Rejestracja i logowanie & Tydzień 2 & Wykonane \\
+\hline
+6 & Dodawanie, edycja i usuwanie zadań & Tydzień 3 & Wykonane \\
+\hline
+7 & Filtrowanie i poprawa wyglądu & Tydzień 3 & Wykonane \\
+\hline
+8 & Testowanie i wdrożenie & Tydzień 4 & Wykonane \\
+\hline
+9 & README i dokumentacja & Tydzień 4 & Wykonane \\
+\hline
+\end{tabularx}
+\caption{Harmonogram realizacji projektu}
+\end{table}
+
+Harmonogram został zrealizowany. Najwięcej czasu zajęła konfiguracja Supabase, logowania i zabezpieczeń RLS.
+
+% =========================================================
+\section{Specyfikacja techniczna}
+% =========================================================
+
+\subsection{Wykorzystane technologie}
+
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{|p{3.5cm}|X|}
+\hline
+\textbf{Technologia} &
+\textbf{Zastosowanie} \\
+\hline
+HTML5 & Podstawowa struktura strony i formularzy. \\
+\hline
+CSS3 & Wygląd aplikacji, Flexbox, Grid i responsywność. \\
+\hline
+JavaScript & Logika aplikacji, walidacja i obsługa danych. \\
+\hline
+Vite & Uruchamianie projektu lokalnie i budowanie wersji produkcyjnej. \\
+\hline
+Supabase & Baza danych PostgreSQL i logowanie użytkowników. \\
+\hline
+GitHub & Repozytorium i historia zmian. \\
+\hline
+GitHub Projects & Planowanie i kontrola zadań projektowych. \\
+\hline
+Vercel & Publikacja aplikacji online. \\
+\hline
+\end{tabularx}
+\caption{Technologie użyte w projekcie}
+\end{table}
+
+\subsection{Model danych}
+
+Zadania są przechowywane w tabeli \texttt{tasks}.
+
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{|p{3cm}|p{2.8cm}|X|}
+\hline
+\textbf{Pole} &
+\textbf{Typ} &
+\textbf{Opis} \\
+\hline
+id & UUID & Identyfikator zadania. \\
+\hline
+user\_id & UUID & Identyfikator właściciela zadania. \\
+\hline
+title & TEXT & Nazwa zadania. \\
+\hline
+description & TEXT & Opcjonalny opis zadania. \\
+\hline
+subject & TEXT & Nazwa przedmiotu. \\
+\hline
+deadline & DATE & Termin wykonania. \\
+\hline
+priority & TEXT & Priorytet: niski, średni lub wysoki. \\
+\hline
+status & TEXT & Status: do zrobienia, w trakcie lub wykonane. \\
+\hline
+created\_at & TIMESTAMP & Data utworzenia zadania. \\
+\hline
+updated\_at & TIMESTAMP & Data ostatniej zmiany. \\
+\hline
+\end{tabularx}
+\caption{Struktura tabeli tasks}
+\end{table}
+
+Każde zadanie posiada pole \texttt{user\_id}. Dzięki temu jest przypisane do konkretnego użytkownika.
+
+Tabela korzysta z Row Level Security. Użytkownik może odczytywać i zmieniać tylko własne zadania.
+
+\screenshot{08_supabase_tasks.png}{Tabela tasks w Supabase}
+
+\subsection{Architektura aplikacji}
+
+Struktura projektu:
+
+\begin{verbatim}
+study-planner/
+|-- public/
+|-- src/
+|   |-- main.js
+|   |-- style.css
+|   |-- tasks.css
+|   `-- supabase.js
+|-- docs/
+|   `-- screenshots/
+|-- index.html
+|-- package.json
+|-- package-lock.json
+|-- .gitignore
+`-- README.md
+\end{verbatim}
+
+Najważniejsze pliki:
+
+\begin{itemize}[leftmargin=*]
+    \item \texttt{index.html} -- podstawowa struktura aplikacji,
+    \item \texttt{main.js} -- logowanie, rejestracja i obsługa zadań,
+    \item \texttt{style.css} -- wygląd logowania i rejestracji,
+    \item \texttt{tasks.css} -- wygląd dashboardu i formularza zadania,
+    \item \texttt{supabase.js} -- konfiguracja połączenia z Supabase.
+\end{itemize}
+
+\subsection{Przepływ działania aplikacji}
+
+\begin{enumerate}[leftmargin=*]
+    \item Użytkownik otwiera aplikację.
+    \item Aplikacja sprawdza, czy istnieje aktywna sesja.
+    \item Niezalogowany użytkownik widzi formularz logowania.
+    \item Użytkownik loguje się lub zakłada konto.
+    \item Po zalogowaniu pobierane są zadania użytkownika.
+    \item Użytkownik otwiera formularz zadania.
+    \item Formularz sprawdza poprawność danych.
+    \item Dane są zapisywane w Supabase.
+    \item Lista zadań i statystyki są aktualizowane.
+    \item Użytkownik może edytować, usuwać lub filtrować zadania.
+\end{enumerate}
+
+% =========================================================
+\section{Kod i repozytorium}
+% =========================================================
+
+\subsection{Repozytorium}
+
+Kod projektu znajduje się w repozytorium GitHub:
+
+\url{https://github.com/tolpamaksymilian/study-planner}
+
+Repozytorium zawiera:
+
+\begin{itemize}[leftmargin=*]
+    \item kod aplikacji,
+    \item plik README,
+    \item historię commitów,
+    \item screenshoty,
+    \item dokumentację projektu.
+\end{itemize}
+
+\subsection{Commity}
+
+Commity pokazują kolejne etapy tworzenia aplikacji:
+
+\begin{itemize}[leftmargin=*]
+    \item utworzenie projektu Vite,
+    \item konfigurację Supabase,
+    \item dodanie logowania i rejestracji,
+    \item dodanie obsługi zadań,
+    \item poprawę wyglądu,
+    \item przygotowanie README,
+    \item dodanie screenshotów.
+\end{itemize}
+
+\screenshot{10_github_commits.png}{Historia commitów w GitHub}
+
+\subsection{Uruchomienie lokalne}
+
+Aby uruchomić projekt lokalnie, należy wykonać:
+
+\begin{verbatim}
+git clone https://github.com/tolpamaksymilian/study-planner.git
+cd study-planner
+npm install
+npm run dev
+\end{verbatim}
+
+W głównym folderze projektu należy utworzyć plik \texttt{.env.local}:
+
+\begin{verbatim}
+VITE_SUPABASE_URL=ADRES_PROJEKTU_SUPABASE
+VITE_SUPABASE_PUBLISHABLE_KEY=KLUCZ_PUBLISHABLE
+\end{verbatim}
+
+Po uruchomieniu aplikacja jest dostępna pod adresem:
+
+\url{http://localhost:5173}
+
+% =========================================================
+\section{Wdrożenie aplikacji}
+% =========================================================
+
+Aplikacja została wdrożona na platformie Vercel.
+
+Adres aplikacji:
+
+\url{https://study-planner-rose-nu.vercel.app/}
+
+Projekt Vercel jest połączony z repozytorium GitHub. Po wysłaniu zmian do gałęzi \texttt{main} publikowana jest nowa wersja aplikacji.
+
+% =========================================================
+\section{Testowanie i zrzuty ekranu}
+% =========================================================
+
+\subsection{Testowane funkcje}
+
+Sprawdzono:
+
+\begin{itemize}[leftmargin=*]
+    \item rejestrację użytkownika,
+    \item logowanie,
+    \item wylogowanie,
+    \item utrzymanie sesji,
+    \item dodawanie zadania,
+    \item edycję zadania,
+    \item usuwanie zadania,
+    \item zmianę statusu,
+    \item filtrowanie,
+    \item wyszukiwanie,
+    \item walidację formularzy,
+    \item oddzielenie danych różnych użytkowników,
+    \item działanie aplikacji na mniejszym ekranie.
+\end{itemize}
+
+\subsection{Logowanie}
+
+\screenshot{01_logowanie.png}{Ekran logowania}
+
+\subsection{Rejestracja}
+
+\screenshot{02_rejestracja.png}{Ekran rejestracji}
+
+\subsection{Dashboard użytkownika}
+
+\screenshot{03_dashboard.png}{Dashboard z listą zadań i statystykami}
+
+\subsection{Dodawanie zadania}
+
+\screenshot[0.82\textwidth]{04_formularz_dodawania.png}{Formularz dodawania zadania}
+
+\subsection{Walidacja formularza}
+
+\screenshot[0.82\textwidth]{05_walidacja_formularza.png}{Komunikaty walidacji formularza}
+
+\subsection{Filtrowanie zadań}
+
+\screenshot{06_filtrowanie_zadan.png}{Filtrowanie listy zadań}
+
+\subsection{Edycja zadania}
+
+\screenshot[0.82\textwidth]{07_edycja_zadania.png}{Formularz edycji zadania}
+
+\subsection{Użytkownicy w Supabase}
+
+\screenshot{09_supabase_users.png}{Użytkownicy zapisani w Supabase Authentication}
+
+% =========================================================
+\section{Podsumowanie}
+% =========================================================
+
+W ramach projektu powstała działająca aplikacja webowa z logowaniem, bazą danych i obsługą zadań.
+
+Aplikacja pozwala dodawać, edytować, usuwać, wyszukiwać i filtrować dane. Każdy użytkownik widzi tylko swoje zadania.
+
+Projekt został umieszczony w repozytorium GitHub i wdrożony online na platformie Vercel.
+
+\end{document}
