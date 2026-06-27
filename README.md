@@ -236,6 +236,52 @@ Sprawdzono:
 * oddzielenie danych użytkowników,
 * działanie na komputerze i telefonie.
 
+## Zrzuty ekranu
+
+### Logowanie
+
+![Ekran logowania](docs/screenshots/01_logowanie.png)
+
+### Rejestracja
+
+![Ekran rejestracji](docs/screenshots/02_rejestracja.png)
+
+### Dashboard użytkownika
+
+![Dashboard użytkownika](docs/screenshots/03_dashboard.png)
+
+### Dodawanie zadania
+
+![Formularz dodawania zadania](docs/screenshots/04_formularz_dodawania.png)
+
+### Walidacja formularza
+
+![Walidacja formularza](docs/screenshots/05_walidacja_formularza.png)
+
+### Filtrowanie zadań
+
+![Filtrowanie zadań](docs/screenshots/06_filtrowanie_zadan.png)
+
+### Edycja zadania
+
+![Edycja zadania](docs/screenshots/07_edycja_zadania.png)
+
+### Tabela zadań w Supabase
+
+![Tabela tasks w Supabase](docs/screenshots/08_supabase_tasks.png)
+
+### Użytkownicy w Supabase
+
+![Użytkownicy w Supabase](docs/screenshots/09_supabase_users.png)
+
+### Historia commitów
+
+![Historia commitów](docs/screenshots/10_github_commits.png)
+
+### Tablica projektu
+
+![Tablica GitHub Projects](docs/screenshots/11_github_projects.png)
+
 ## Autor
 
 Maksymilian Tołpa
