@@ -1,9 +1,18 @@
 import './style.css';
+import './tasks.css';
 import { supabase } from './supabase.js';
 
 const app = document.querySelector('#app');
 
 let currentAuthView = 'login';
+let currentUser = null;
+let tasks = [];
+
+let filters = {
+  search: '',
+  status: 'all',
+  priority: 'all',
+};
 
 function renderLoading() {
   app.innerHTML = `
@@ -90,7 +99,7 @@ function renderAuth() {
             </p>
           </div>
 
-          <div class="auth-tabs" role="tablist">
+          <div class="auth-tabs">
             <button
               id="show-login"
               class="${isLogin ? 'active' : ''}"
@@ -124,11 +133,12 @@ function renderAuth() {
                       id="login-email"
                       name="email"
                       type="email"
-                      autocomplete="email"
                       placeholder="np. student@example.com"
-                      required
                     />
-                    <small class="field-error" data-error-for="login-email"></small>
+                    <small
+                      class="field-error"
+                      data-error-for="login-email"
+                    ></small>
                   </div>
 
                   <div class="form-group">
@@ -139,22 +149,22 @@ function renderAuth() {
                         id="login-password"
                         name="password"
                         type="password"
-                        autocomplete="current-password"
                         placeholder="Wpisz swoje hasło"
-                        required
                       />
 
                       <button
                         class="password-toggle"
                         type="button"
                         data-password-target="login-password"
-                        aria-label="Pokaż lub ukryj hasło"
                       >
                         Pokaż
                       </button>
                     </div>
 
-                    <small class="field-error" data-error-for="login-password"></small>
+                    <small
+                      class="field-error"
+                      data-error-for="login-password"
+                    ></small>
                   </div>
 
                   <button class="primary-button" type="submit">
@@ -170,11 +180,12 @@ function renderAuth() {
                       id="register-name"
                       name="name"
                       type="text"
-                      autocomplete="given-name"
                       placeholder="Wpisz swoje imię"
-                      required
                     />
-                    <small class="field-error" data-error-for="register-name"></small>
+                    <small
+                      class="field-error"
+                      data-error-for="register-name"
+                    ></small>
                   </div>
 
                   <div class="form-group">
@@ -183,11 +194,12 @@ function renderAuth() {
                       id="register-email"
                       name="email"
                       type="email"
-                      autocomplete="email"
                       placeholder="np. student@example.com"
-                      required
                     />
-                    <small class="field-error" data-error-for="register-email"></small>
+                    <small
+                      class="field-error"
+                      data-error-for="register-email"
+                    ></small>
                   </div>
 
                   <div class="form-group">
@@ -198,22 +210,22 @@ function renderAuth() {
                         id="register-password"
                         name="password"
                         type="password"
-                        autocomplete="new-password"
                         placeholder="Minimum 6 znaków"
-                        required
                       />
 
                       <button
                         class="password-toggle"
                         type="button"
                         data-password-target="register-password"
-                        aria-label="Pokaż lub ukryj hasło"
                       >
                         Pokaż
                       </button>
                     </div>
 
-                    <small class="field-error" data-error-for="register-password"></small>
+                    <small
+                      class="field-error"
+                      data-error-for="register-password"
+                    ></small>
                   </div>
 
                   <div class="form-group">
@@ -226,16 +238,13 @@ function renderAuth() {
                         id="register-password-repeat"
                         name="passwordRepeat"
                         type="password"
-                        autocomplete="new-password"
                         placeholder="Wpisz hasło ponownie"
-                        required
                       />
 
                       <button
                         class="password-toggle"
                         type="button"
                         data-password-target="register-password-repeat"
-                        aria-label="Pokaż lub ukryj hasło"
                       >
                         Pokaż
                       </button>
@@ -255,11 +264,7 @@ function renderAuth() {
           }
 
           <p class="auth-switch">
-            ${
-              isLogin
-                ? 'Nie masz jeszcze konta?'
-                : 'Masz już konto?'
-            }
+            ${isLogin ? 'Nie masz jeszcze konta?' : 'Masz już konto?'}
 
             <button id="auth-switch-button" type="button">
               ${isLogin ? 'Zarejestruj się' : 'Zaloguj się'}
@@ -273,7 +278,9 @@ function renderAuth() {
   bindAuthEvents();
 }
 
-function renderDashboard(user) {
+async function renderDashboard(user) {
+  currentUser = user;
+
   const displayName =
     user.user_metadata?.display_name ||
     user.email?.split('@')[0] ||
@@ -297,52 +304,78 @@ function renderDashboard(user) {
             <span>${escapeHtml(user.email || '')}</span>
           </div>
 
-          <button id="logout-button" class="secondary-button" type="button">
+          <button
+            id="logout-button"
+            class="secondary-button"
+            type="button"
+          >
             Wyloguj się
           </button>
         </div>
       </header>
 
       <section class="dashboard-content">
-        <div class="welcome-card">
-          <span class="hero-badge">Logowanie działa poprawnie</span>
+        <div class="dashboard-top">
+          <div class="dashboard-title">
+            <h1>Moje zadania</h1>
+            <p>
+              Dodawaj zadania, kontroluj terminy i obserwuj swoje postępy.
+            </p>
+          </div>
 
-          <h1>Witaj, ${escapeHtml(displayName)}!</h1>
-
-          <p>
-            Twoje konto jest aktywne. W następnym etapie dodamy
-            dashboard, formularz zadania oraz listę danych z Supabase.
-          </p>
+          <button id="add-task-button" class="add-task-button" type="button">
+            + Dodaj zadanie
+          </button>
         </div>
 
-        <div class="dashboard-placeholder">
-          <article>
-            <span>0</span>
-            <p>Wszystkie zadania</p>
-          </article>
+        <section id="statistics-grid" class="statistics-grid"></section>
 
-          <article>
-            <span>0</span>
-            <p>Do zrobienia</p>
-          </article>
+        <section class="filters-panel">
+          <div class="filter-field">
+            <label for="task-search">Wyszukaj zadanie</label>
+            <input
+              id="task-search"
+              type="search"
+              placeholder="Wpisz nazwę, opis lub przedmiot..."
+            />
+          </div>
 
-          <article>
-            <span>0</span>
-            <p>Wykonane</p>
-          </article>
+          <div class="filter-field">
+            <label for="status-filter">Status</label>
+            <select id="status-filter">
+              <option value="all">Wszystkie statusy</option>
+              <option value="todo">Do zrobienia</option>
+              <option value="in_progress">W trakcie</option>
+              <option value="done">Wykonane</option>
+            </select>
+          </div>
 
-          <article>
-            <span>0</span>
-            <p>Po terminie</p>
-          </article>
-        </div>
+          <div class="filter-field">
+            <label for="priority-filter">Priorytet</label>
+            <select id="priority-filter">
+              <option value="all">Wszystkie priorytety</option>
+              <option value="low">Niski</option>
+              <option value="medium">Średni</option>
+              <option value="high">Wysoki</option>
+            </select>
+          </div>
+        </section>
+
+        <section id="tasks-container" class="tasks-container">
+          <div class="tasks-loader">
+            <div class="loader"></div>
+            <p>Pobieranie zadań...</p>
+          </div>
+        </section>
       </section>
     </main>
+
+    <div id="modal-container"></div>
+    <div id="toast-container"></div>
   `;
 
-  document
-    .querySelector('#logout-button')
-    .addEventListener('click', handleLogout);
+  bindDashboardEvents();
+  await loadTasks();
 }
 
 function bindAuthEvents() {
@@ -367,15 +400,15 @@ function bindAuthEvents() {
 
   document.querySelectorAll('.password-toggle').forEach((button) => {
     button.addEventListener('click', () => {
-      const targetId = button.dataset.passwordTarget;
-      const input = document.querySelector(`#${targetId}`);
+      const input = document.querySelector(
+        `#${button.dataset.passwordTarget}`
+      );
 
       if (!input) {
         return;
       }
 
       const isPassword = input.type === 'password';
-
       input.type = isPassword ? 'text' : 'password';
       button.textContent = isPassword ? 'Ukryj' : 'Pokaż';
     });
@@ -388,6 +421,623 @@ function bindAuthEvents() {
   document
     .querySelector('#register-form')
     ?.addEventListener('submit', handleRegister);
+}
+
+function bindDashboardEvents() {
+  document
+    .querySelector('#logout-button')
+    .addEventListener('click', handleLogout);
+
+  document
+    .querySelector('#add-task-button')
+    .addEventListener('click', () => openTaskModal());
+
+  document
+    .querySelector('#task-search')
+    .addEventListener('input', (event) => {
+      filters.search = event.target.value.trim().toLowerCase();
+      renderTasks();
+    });
+
+  document
+    .querySelector('#status-filter')
+    .addEventListener('change', (event) => {
+      filters.status = event.target.value;
+      renderTasks();
+    });
+
+  document
+    .querySelector('#priority-filter')
+    .addEventListener('change', (event) => {
+      filters.priority = event.target.value;
+      renderTasks();
+    });
+}
+
+async function loadTasks() {
+  const container = document.querySelector('#tasks-container');
+
+  container.innerHTML = `
+    <div class="tasks-loader">
+      <div class="loader"></div>
+      <p>Pobieranie zadań...</p>
+    </div>
+  `;
+
+  const { data, error } = await supabase
+    .from('tasks')
+    .select('*')
+    .order('deadline', { ascending: true })
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    container.innerHTML = `
+      <div class="tasks-error">
+        <div>
+          <h3>Nie udało się pobrać zadań</h3>
+          <p>${escapeHtml(error.message)}</p>
+        </div>
+      </div>
+    `;
+
+    return;
+  }
+
+  tasks = data || [];
+
+  renderStatistics();
+  renderTasks();
+}
+
+function renderStatistics() {
+  const statistics = document.querySelector('#statistics-grid');
+
+  if (!statistics) {
+    return;
+  }
+
+  const today = getTodayDate();
+
+  const allCount = tasks.length;
+  const todoCount = tasks.filter((task) => task.status === 'todo').length;
+  const progressCount = tasks.filter(
+    (task) => task.status === 'in_progress'
+  ).length;
+  const doneCount = tasks.filter((task) => task.status === 'done').length;
+
+  const overdueCount = tasks.filter(
+    (task) => task.status !== 'done' && task.deadline < today
+  ).length;
+
+  statistics.innerHTML = `
+    <article class="stat-card">
+      <span>${allCount}</span>
+      <p>Wszystkie zadania</p>
+    </article>
+
+    <article class="stat-card">
+      <span>${todoCount}</span>
+      <p>Do zrobienia</p>
+    </article>
+
+    <article class="stat-card">
+      <span>${progressCount}</span>
+      <p>W trakcie</p>
+    </article>
+
+    <article class="stat-card">
+      <span>${doneCount}</span>
+      <p>Wykonane</p>
+    </article>
+
+    <article class="stat-card">
+      <span>${overdueCount}</span>
+      <p>Po terminie</p>
+    </article>
+  `;
+}
+
+function renderTasks() {
+  const container = document.querySelector('#tasks-container');
+
+  if (!container) {
+    return;
+  }
+
+  const filteredTasks = tasks.filter((task) => {
+    const searchableText = `
+      ${task.title}
+      ${task.description || ''}
+      ${task.subject}
+    `.toLowerCase();
+
+    const matchesSearch =
+      !filters.search || searchableText.includes(filters.search);
+
+    const matchesStatus =
+      filters.status === 'all' || task.status === filters.status;
+
+    const matchesPriority =
+      filters.priority === 'all' ||
+      task.priority === filters.priority;
+
+    return matchesSearch && matchesStatus && matchesPriority;
+  });
+
+  if (!filteredTasks.length) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div>
+          <h3>Brak zadań</h3>
+          <p>
+            Nie znaleziono zadań pasujących do wybranych filtrów.
+            Dodaj pierwsze zadanie albo zmień kryteria wyszukiwania.
+          </p>
+        </div>
+      </div>
+    `;
+
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="tasks-list">
+      ${filteredTasks.map(createTaskCard).join('')}
+    </div>
+  `;
+
+  container.querySelectorAll('[data-action="edit"]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const task = tasks.find((item) => item.id === button.dataset.id);
+      openTaskModal(task);
+    });
+  });
+
+  container.querySelectorAll('[data-action="delete"]').forEach((button) => {
+    button.addEventListener('click', () => {
+      deleteTask(button.dataset.id);
+    });
+  });
+
+  container.querySelectorAll('[data-action="toggle"]').forEach((button) => {
+    button.addEventListener('click', () => {
+      toggleTaskStatus(button.dataset.id);
+    });
+  });
+}
+
+function createTaskCard(task) {
+  const today = getTodayDate();
+  const isOverdue = task.status !== 'done' && task.deadline < today;
+  const isDone = task.status === 'done';
+
+  return `
+    <article
+      class="task-card ${isOverdue ? 'overdue' : ''} ${
+        isDone ? 'done' : ''
+      }"
+    >
+      <div class="task-main">
+        <div class="task-top-row">
+          <h3>${escapeHtml(task.title)}</h3>
+
+          <span class="badge badge-priority-${task.priority}">
+            ${getPriorityLabel(task.priority)}
+          </span>
+
+          <span class="badge badge-status-${toClassName(task.status)}">
+            ${getStatusLabel(task.status)}
+          </span>
+        </div>
+
+        ${
+          task.description
+            ? `
+              <p class="task-description">
+                ${escapeHtml(task.description)}
+              </p>
+            `
+            : ''
+        }
+
+        <div class="task-meta">
+          <span>
+            <strong>Przedmiot:</strong>
+            ${escapeHtml(task.subject)}
+          </span>
+
+          <span>
+            <strong>Termin:</strong>
+            ${formatDate(task.deadline)}
+          </span>
+
+          ${
+            isOverdue
+              ? `
+                <span>
+                  <strong>Uwaga:</strong>
+                  zadanie po terminie
+                </span>
+              `
+              : ''
+          }
+        </div>
+      </div>
+
+      <div class="task-actions">
+        <button
+          class="task-action-button complete"
+          type="button"
+          data-action="toggle"
+          data-id="${task.id}"
+        >
+          ${isDone ? 'Przywróć' : 'Wykonane'}
+        </button>
+
+        <button
+          class="task-action-button"
+          type="button"
+          data-action="edit"
+          data-id="${task.id}"
+        >
+          Edytuj
+        </button>
+
+        <button
+          class="task-action-button delete"
+          type="button"
+          data-action="delete"
+          data-id="${task.id}"
+        >
+          Usuń
+        </button>
+      </div>
+    </article>
+  `;
+}
+
+function openTaskModal(task = null) {
+  const modalContainer = document.querySelector('#modal-container');
+
+  const isEdit = Boolean(task);
+
+  modalContainer.innerHTML = `
+    <div class="modal-overlay" id="task-modal-overlay">
+      <section class="modal">
+        <div class="modal-header">
+          <div>
+            <h2>${isEdit ? 'Edytuj zadanie' : 'Dodaj zadanie'}</h2>
+            <p>
+              ${
+                isEdit
+                  ? 'Zmień dane wybranego zadania.'
+                  : 'Uzupełnij formularz i zapisz nowe zadanie.'
+              }
+            </p>
+          </div>
+
+          <button id="modal-close" class="modal-close" type="button">
+            ×
+          </button>
+        </div>
+
+        <form id="task-form" class="task-form" novalidate>
+          <div class="form-group">
+            <label for="task-title">Nazwa zadania</label>
+            <input
+              id="task-title"
+              name="title"
+              type="text"
+              maxlength="120"
+              value="${escapeAttribute(task?.title || '')}"
+              placeholder="Np. Przygotować prezentację"
+            />
+            <small
+              class="field-error"
+              data-error-for="task-title"
+            ></small>
+          </div>
+
+          <div class="form-group">
+            <label for="task-description">Opis</label>
+            <textarea
+              id="task-description"
+              name="description"
+              maxlength="1000"
+              placeholder="Opcjonalny opis zadania"
+            >${escapeHtml(task?.description || '')}</textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="task-subject">Przedmiot</label>
+            <input
+              id="task-subject"
+              name="subject"
+              type="text"
+              maxlength="100"
+              value="${escapeAttribute(task?.subject || '')}"
+              placeholder="Np. Technologie internetowe"
+            />
+            <small
+              class="field-error"
+              data-error-for="task-subject"
+            ></small>
+          </div>
+
+          <div class="task-form-row">
+            <div class="form-group">
+              <label for="task-deadline">Termin</label>
+              <input
+                id="task-deadline"
+                name="deadline"
+                type="date"
+                value="${task?.deadline || ''}"
+              />
+              <small
+                class="field-error"
+                data-error-for="task-deadline"
+              ></small>
+            </div>
+
+            <div class="form-group">
+              <label for="task-priority">Priorytet</label>
+              <select id="task-priority" name="priority">
+                <option
+                  value="low"
+                  ${task?.priority === 'low' ? 'selected' : ''}
+                >
+                  Niski
+                </option>
+
+                <option
+                  value="medium"
+                  ${!task || task.priority === 'medium' ? 'selected' : ''}
+                >
+                  Średni
+                </option>
+
+                <option
+                  value="high"
+                  ${task?.priority === 'high' ? 'selected' : ''}
+                >
+                  Wysoki
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="task-status">Status</label>
+            <select id="task-status" name="status">
+              <option
+                value="todo"
+                ${!task || task.status === 'todo' ? 'selected' : ''}
+              >
+                Do zrobienia
+              </option>
+
+              <option
+                value="in_progress"
+                ${task?.status === 'in_progress' ? 'selected' : ''}
+              >
+                W trakcie
+              </option>
+
+              <option
+                value="done"
+                ${task?.status === 'done' ? 'selected' : ''}
+              >
+                Wykonane
+              </option>
+            </select>
+          </div>
+
+          <div class="modal-actions">
+            <button
+              id="modal-cancel"
+              class="cancel-button"
+              type="button"
+            >
+              Anuluj
+            </button>
+
+            <button class="primary-button" type="submit">
+              ${isEdit ? 'Zapisz zmiany' : 'Dodaj zadanie'}
+            </button>
+          </div>
+        </form>
+      </section>
+    </div>
+  `;
+
+  document
+    .querySelector('#modal-close')
+    .addEventListener('click', closeTaskModal);
+
+  document
+    .querySelector('#modal-cancel')
+    .addEventListener('click', closeTaskModal);
+
+  document
+    .querySelector('#task-modal-overlay')
+    .addEventListener('click', (event) => {
+      if (event.target.id === 'task-modal-overlay') {
+        closeTaskModal();
+      }
+    });
+
+  document
+    .querySelector('#task-form')
+    .addEventListener('submit', (event) => {
+      handleTaskSubmit(event, task?.id || null);
+    });
+}
+
+function closeTaskModal() {
+  const modalContainer = document.querySelector('#modal-container');
+
+  if (modalContainer) {
+    modalContainer.innerHTML = '';
+  }
+}
+
+async function handleTaskSubmit(event, taskId) {
+  event.preventDefault();
+
+  const form = event.currentTarget;
+  clearTaskValidation();
+
+  const title = form.title.value.trim();
+  const description = form.description.value.trim();
+  const subject = form.subject.value.trim();
+  const deadline = form.deadline.value;
+  const priority = form.priority.value;
+  const status = form.status.value;
+
+  let hasError = false;
+
+  if (title.length < 3) {
+    showTaskFieldError(
+      'task-title',
+      'Nazwa zadania musi mieć minimum 3 znaki.'
+    );
+
+    hasError = true;
+  }
+
+  if (subject.length < 2) {
+    showTaskFieldError(
+      'task-subject',
+      'Podaj nazwę przedmiotu.'
+    );
+
+    hasError = true;
+  }
+
+  if (!deadline) {
+    showTaskFieldError(
+      'task-deadline',
+      'Wybierz termin wykonania.'
+    );
+
+    hasError = true;
+  }
+
+  if (hasError) {
+    return;
+  }
+
+  const submitButton = form.querySelector('button[type="submit"]');
+  submitButton.disabled = true;
+  submitButton.textContent = 'Zapisywanie...';
+
+  const taskData = {
+    user_id: currentUser.id,
+    title,
+    description: description || null,
+    subject,
+    deadline,
+    priority,
+    status,
+    updated_at: new Date().toISOString(),
+  };
+
+  let error;
+
+  if (taskId) {
+    const response = await supabase
+      .from('tasks')
+      .update(taskData)
+      .eq('id', taskId);
+
+    error = response.error;
+  } else {
+    const response = await supabase
+      .from('tasks')
+      .insert(taskData);
+
+    error = response.error;
+  }
+
+  if (error) {
+    submitButton.disabled = false;
+    submitButton.textContent = taskId
+      ? 'Zapisz zmiany'
+      : 'Dodaj zadanie';
+
+    showToast(`Nie udało się zapisać zadania: ${error.message}`, 'error');
+    return;
+  }
+
+  closeTaskModal();
+
+  showToast(
+    taskId
+      ? 'Zadanie zostało zaktualizowane.'
+      : 'Zadanie zostało dodane.',
+    'success'
+  );
+
+  await loadTasks();
+}
+
+async function toggleTaskStatus(taskId) {
+  const task = tasks.find((item) => item.id === taskId);
+
+  if (!task) {
+    return;
+  }
+
+  const nextStatus = task.status === 'done' ? 'todo' : 'done';
+
+  const { error } = await supabase
+    .from('tasks')
+    .update({
+      status: nextStatus,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', taskId);
+
+  if (error) {
+    showToast(
+      `Nie udało się zmienić statusu: ${error.message}`,
+      'error'
+    );
+
+    return;
+  }
+
+  showToast('Status zadania został zmieniony.', 'success');
+  await loadTasks();
+}
+
+async function deleteTask(taskId) {
+  const task = tasks.find((item) => item.id === taskId);
+
+  const confirmed = window.confirm(
+    `Czy na pewno usunąć zadanie „${task?.title || 'zadanie'}”?`
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
+  const { error } = await supabase
+    .from('tasks')
+    .delete()
+    .eq('id', taskId);
+
+  if (error) {
+    showToast(
+      `Nie udało się usunąć zadania: ${error.message}`,
+      'error'
+    );
+
+    return;
+  }
+
+  showToast('Zadanie zostało usunięte.', 'success');
+  await loadTasks();
 }
 
 async function handleLogin(event) {
@@ -423,16 +1073,9 @@ async function handleLogin(event) {
   });
 
   if (error) {
-    showMessage(
-      translateAuthError(error.message, 'login'),
-      'error'
-    );
-
+    showMessage('Nieprawidłowy adres e-mail lub hasło.', 'error');
     setFormLoading(form, false, 'Zaloguj się');
-    return;
   }
-
-  showMessage('Zalogowano poprawnie.', 'success');
 }
 
 async function handleRegister(event) {
@@ -452,6 +1095,7 @@ async function handleRegister(event) {
       'register-name',
       'Imię musi mieć minimum 2 znaki.'
     );
+
     hasError = true;
   }
 
@@ -460,6 +1104,7 @@ async function handleRegister(event) {
       'register-email',
       'Podaj poprawny adres e-mail.'
     );
+
     hasError = true;
   }
 
@@ -468,6 +1113,7 @@ async function handleRegister(event) {
       'register-password',
       'Hasło musi mieć minimum 6 znaków.'
     );
+
     hasError = true;
   }
 
@@ -476,6 +1122,7 @@ async function handleRegister(event) {
       'register-password-repeat',
       'Podane hasła nie są takie same.'
     );
+
     hasError = true;
   }
 
@@ -497,26 +1144,19 @@ async function handleRegister(event) {
   });
 
   if (error) {
-    showMessage(
-      translateAuthError(error.message, 'register'),
-      'error'
-    );
-
+    showMessage(`Wystąpił błąd: ${error.message}`, 'error');
     setFormLoading(form, false, 'Utwórz konto');
     return;
   }
 
   if (!data.session) {
     showMessage(
-      'Konto zostało utworzone. Sprawdź skrzynkę e-mail i potwierdź rejestrację.',
+      'Konto zostało utworzone. Sprawdź pocztę i potwierdź rejestrację.',
       'success'
     );
 
     setFormLoading(form, false, 'Utwórz konto');
-    return;
   }
-
-  showMessage('Konto zostało utworzone poprawnie.', 'success');
 }
 
 async function handleLogout() {
@@ -530,13 +1170,40 @@ async function handleLogout() {
   const { error } = await supabase.auth.signOut();
 
   if (error) {
-    alert(`Nie udało się wylogować: ${error.message}`);
+    showToast(`Nie udało się wylogować: ${error.message}`, 'error');
 
     if (button) {
       button.disabled = false;
       button.textContent = 'Wyloguj się';
     }
   }
+}
+
+function showTaskFieldError(inputId, message) {
+  const input = document.querySelector(`#${inputId}`);
+  const errorElement = document.querySelector(
+    `[data-error-for="${inputId}"]`
+  );
+
+  input?.classList.add('invalid');
+
+  if (errorElement) {
+    errorElement.textContent = message;
+  }
+}
+
+function clearTaskValidation() {
+  document
+    .querySelectorAll('#task-form .invalid')
+    .forEach((element) => {
+      element.classList.remove('invalid');
+    });
+
+  document
+    .querySelectorAll('#task-form .field-error')
+    .forEach((element) => {
+      element.textContent = '';
+    });
 }
 
 function showFieldError(inputId, message) {
@@ -592,41 +1259,72 @@ function setFormLoading(form, isLoading, label) {
   }
 }
 
-function isValidEmail(email) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+function showToast(text, type) {
+  const container = document.querySelector('#toast-container');
+
+  if (!container) {
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="toast ${type}">
+      ${escapeHtml(text)}
+    </div>
+  `;
+
+  window.setTimeout(() => {
+    container.innerHTML = '';
+  }, 3500);
 }
 
-function translateAuthError(message, context) {
-  const normalizedMessage = message.toLowerCase();
+function getPriorityLabel(priority) {
+  const labels = {
+    low: 'Niski',
+    medium: 'Średni',
+    high: 'Wysoki',
+  };
 
-  if (
-    normalizedMessage.includes('invalid login credentials') ||
-    normalizedMessage.includes('email not confirmed')
-  ) {
-    return context === 'login'
-      ? 'Nieprawidłowy adres e-mail lub hasło.'
-      : 'Nie udało się utworzyć konta.';
+  return labels[priority] || priority;
+}
+
+function getStatusLabel(status) {
+  const labels = {
+    todo: 'Do zrobienia',
+    in_progress: 'W trakcie',
+    done: 'Wykonane',
+  };
+
+  return labels[status] || status;
+}
+
+function toClassName(value) {
+  return value.replaceAll('_', '-');
+}
+
+function formatDate(dateValue) {
+  if (!dateValue) {
+    return 'Brak terminu';
   }
 
-  if (
-    normalizedMessage.includes('user already registered') ||
-    normalizedMessage.includes('already been registered')
-  ) {
-    return 'Konto z tym adresem e-mail już istnieje.';
-  }
+  return new Intl.DateTimeFormat('pl-PL', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  }).format(new Date(`${dateValue}T12:00:00`));
+}
 
-  if (normalizedMessage.includes('password')) {
-    return 'Hasło nie spełnia wymagań bezpieczeństwa.';
-  }
+function getTodayDate() {
+  const now = new Date();
 
-  if (
-    normalizedMessage.includes('rate limit') ||
-    normalizedMessage.includes('too many')
-  ) {
-    return 'Wykonano zbyt wiele prób. Spróbuj ponownie później.';
-  }
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
 
-  return `Wystąpił błąd: ${message}`;
+  return `${year}-${month}-${day}`;
+}
+
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
 function escapeHtml(value) {
@@ -636,6 +1334,10 @@ function escapeHtml(value) {
     .replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&#039;');
+}
+
+function escapeAttribute(value) {
+  return escapeHtml(value);
 }
 
 async function initializeApp() {
@@ -653,7 +1355,7 @@ async function initializeApp() {
   }
 
   if (session?.user) {
-    renderDashboard(session.user);
+    await renderDashboard(session.user);
   } else {
     renderAuth();
   }
@@ -664,6 +1366,8 @@ async function initializeApp() {
     }
 
     if (event === 'SIGNED_OUT') {
+      currentUser = null;
+      tasks = [];
       currentAuthView = 'login';
       renderAuth();
     }
